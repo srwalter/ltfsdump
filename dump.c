@@ -52,6 +52,19 @@ int set_scsi_opt(int fd, int option) {
     }
 }
 
+int scsi_rewind(int fd) {
+    struct mtop mt_command;
+
+    mt_command.mt_op = MTREW;
+    mt_command.mt_count = 1;
+
+    // Execute the command
+    if (ioctl(fd, MTIOCTOP, &mt_command) < 0) {
+        perror("MTSETOPTIONS failed");
+        exit(1);
+    }
+}
+
 void read_to_file(int fd, char *filename) {
     int outfd = open(filename, O_WRONLY | O_CREAT);
     char buf[512 * 1024];
@@ -79,7 +92,7 @@ int main() {
     const char *tape_device = "/dev/nst0";
     int fd = open(tape_device, O_RDWR);
     // Make sure we start at the beginning
-    lseek(fd, 0, SEEK_SET);
+    scsi_rewind(fd);
 
     // Enable logical blocks so we can get the block position of each extent
     set_scsi_opt(fd, MT_ST_SCSI2LOGICAL);

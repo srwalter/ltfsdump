@@ -24,7 +24,7 @@ int set_tape_partition(int fd, int partition) {
     return 0;
 }
 
-int get_current_lbn(int fd, const char *device) {
+int get_current_lbn(int fd) {
     struct mtpos mt_position;
 
     // Query the current tape position (LBN)
@@ -88,9 +88,12 @@ void read_to_file(int fd, char *filename) {
     close(outfd);
 }
 
-int main() {
-    const char *tape_device = "/dev/nst0";
-    int fd = open(tape_device, O_RDWR);
+int main(int argc, char **argv) {
+    int fd = open(argv[1], O_RDWR);
+    if (fd < 1) {
+        perror("open");
+        exit(1);
+    }
     // Make sure we start at the beginning
     scsi_rewind(fd);
 
@@ -116,7 +119,7 @@ int main() {
         free(fn);
 
         // Name the data based on its logical block, for later reconstruction
-        int lbn = get_current_lbn(fd, tape_device);
+        int lbn = get_current_lbn(fd);
         asprintf(&fn, "data-%d", lbn);
         read_to_file(fd, fn);
         free(fn);

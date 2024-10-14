@@ -1,0 +1,12 @@
+ltfsdump
+========
+I wrote this to help recover a tape that had gotten into a sad state.  Use the
+"dump" command first:
+
+    $ ./dump /dev/nst0
+
+This will dump out all the indices and data extents from the data partition of
+the tape to the current directory.  Then you can run ltfsdump, which will parse
+a given index and reconstruct the files from data in the current directory:
+
+    $ cargo run

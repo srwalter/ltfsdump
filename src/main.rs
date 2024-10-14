@@ -13,24 +13,24 @@ struct Extent {
 }
 
 #[derive(Deserialize,Debug)]
-struct Extent2 {
+struct ExtentInfo {
     extent: Vec<Extent>
 }
 
 #[derive(Deserialize,Debug)]
 struct LTFSFile {
     name: String,
-    extentinfo: Extent2
+    extentinfo: ExtentInfo
 }
 
 #[derive(Deserialize,Debug)]
-struct File2 {
+struct Contents {
     file: Vec<LTFSFile>,
 }
 
 #[derive(Deserialize,Debug)]
 struct Directory {
-    contents: File2
+    contents: Contents
 }
 
 #[derive(Deserialize,Debug)]
@@ -52,20 +52,22 @@ fn main() -> io::Result<()> {
         let mut output = OpenOptions::new()
             .create(true)
             .write(true)
-            .open(f.name)?;
+            .open(&f.name)?;
+
+        println!("Restoring {}", f.name);
 
         for extent in f.extentinfo.extent {
             output.seek(SeekFrom::Start(extent.fileoffset))?;
             assert_eq!(extent.byteoffset, 0);
 
             let extent_name = format!("data-{}", extent.startblock);
-            let mut input = File::open(extent_name)?;
-
-            io::copy(&mut input, &mut output)?;
+            if let Ok(mut input) = File::open(extent_name) {
+                io::copy(&mut input, &mut output)?;
+            } else {
+                eprintln!("Failed to open data block {}, that part of the file will be blank", extent.startblock);
+            }
         }
     }
-
-
 
     Ok(())
 }
